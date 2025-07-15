@@ -1,0 +1,24 @@
+{
+  "name": "premiumize-downloader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.12.3",
+  "dependencies": {
+    "await-to-js": "^3.0.0",
+    "commander": "^14.0.0",
+    "dotenv": "^17.2.0",
+    "envalid": "^8.1.0",
+    "tsx": "^4.20.3",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.10"
+  }
+}
