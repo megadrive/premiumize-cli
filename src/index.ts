@@ -1,9 +1,10 @@
 import "./env.js";
 import { Command } from "commander";
-import { version } from "../package.json";
 import { premiumizeApi } from "./lib/premiumizeApi.js";
 import to from "await-to-js";
 import { appEnv } from "./env.js";
+
+const version = "0.0.1";
 
 if (!appEnv.VERBOSE_LOGGING) {
   console.debug = (..._args) => {};

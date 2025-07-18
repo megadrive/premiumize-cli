@@ -2,9 +2,11 @@
   "name": "premiumize-downloader",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tsc --no-emit",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +21,7 @@
     "zod": "^4.0.5"
   },
   "devDependencies": {
-    "@types/node": "^24.0.10"
+    "@types/node": "^24.0.10",
+    "typescript": "^5.8.3"
   }
 }
