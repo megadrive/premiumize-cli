@@ -20,18 +20,27 @@ function appendToken(url: string) {
 async function api<T>(
   path: string,
   schema: z.ZodType<T>,
-  fetchOpts: RequestInit = {}
+  opts: RequestInit & { dryrun?: boolean } = {}
 ) {
   const url = appendToken(
     `https://www.premiumize.me/api/${path.replace(/^\//, "")}`
   );
+
+  console.debug(`[fetch] [${opts.method ?? "GET"}] ${url}`);
+  console.debug(`[fetch] options: ${JSON.stringify(opts, null, 2)}`);
+
+  if (opts.dryrun) {
+    console.debug("[fetch] Dry run mode, not actually fetching.");
+    return schema.parse({} as T); // Return an empty object for dry run
+  }
+
   const [resErr, res] = await to(
     fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      ...fetchOpts,
+      ...opts,
     })
   );
 
@@ -58,8 +67,16 @@ async function api<T>(
 }
 
 export const premiumizeApi = {
+  /** services/list */
   listServices: () => api("services/list", Schema_ServicesList),
-  checkCache: (url: string) => api("cache/check", Schema_CacheCheck),
+  /** cache/check */
+  checkCache: (urls: string[]) => {
+    const params = urls
+      .map((url) => `items[]=${encodeURIComponent(url)}`)
+      .join("&");
+    return api(`cache/check?${encodeURIComponent(params)}`, Schema_CacheCheck);
+  },
+  /** folder/list */
   listFolder: (
     options: {
       folderId?: string;
@@ -88,15 +105,18 @@ export const premiumizeApi = {
     }
 
     const path = "folder/create";
-    const formData = new FormData();
-    formData.set("name", name);
+    const formData = new URLSearchParams({
+      name,
+    });
     if (parentId) {
       formData.set("parent_id", parentId);
     }
+    console.debug({ formData });
     return api(path, Schema_FolderCreate, {
       method: "POST",
-      body: formData,
+      body: formData.toString(),
       headers: {
+        Accept: "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
