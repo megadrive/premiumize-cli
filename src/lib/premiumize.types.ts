@@ -66,3 +66,41 @@ export const Schema_FolderCreate = z.object({
   message: z.string().optional(),
   id: z.string().optional(),
 });
+
+export const Schema_FolderRename = z.object({
+  status: z.enum(["success", "error"]),
+  message: z.string().optional(),
+});
+
+export const Schema_FolderDelete = z.object({
+  status: z.enum(["success", "error"]),
+  message: z.string().optional(),
+});
+
+const ItemSchema_Short = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(["file", "folder"]),
+  created_at: z.number(),
+});
+export const Schema_FolderSearch = z.object({
+  status: z.enum(["success", "error"]),
+  content: z.array(ItemSchema_Short),
+  name: z.string().optional(),
+  parent_id: z.string().optional(),
+  breadcrumbs: z.string().optional(),
+});
+
+const ItemSchema_ListAll = z.object({
+  id: z.string(),
+  name: z.string(),
+  created_at: z.number(),
+  size: z.number(),
+  mime_type: z.string(),
+  virus_scan: z.enum(["ok", "infected", "error"]),
+  path: z.string(),
+});
+export const Schema_ItemListAll = z.object({
+  status: z.enum(["success", "error"]),
+  files: z.array(ItemSchema_ListAll),
+});

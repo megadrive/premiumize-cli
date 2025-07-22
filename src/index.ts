@@ -24,7 +24,7 @@ app
   .command("services")
   .description("List available services")
   .action(async () => {
-    const [servicesErr, services] = await to(premiumizeApi.listServices());
+    const [servicesErr, services] = await to(premiumizeApi.services.list());
     if (servicesErr) {
       console.error("Failed to fetch services:", servicesErr.message);
       process.exit(1);
@@ -45,7 +45,7 @@ app
       .map((url) => url.trim());
     const { json, details } = opts;
 
-    const [cacheErr, cache] = await to(premiumizeApi.checkCache(urls));
+    const [cacheErr, cache] = await to(premiumizeApi.cache.check(urls));
     if (cacheErr) {
       console.error("Failed to check cache:", cacheErr.message);
       process.exit(1);
@@ -86,7 +86,7 @@ folder
     const folderId = arg.folderId ?? undefined;
     const { includeBreadcrumbs, json } = opts;
     const [listErr, folderList] = await to(
-      premiumizeApi.listFolder({
+      premiumizeApi.folder.list({
         folderId,
         includeBreadcrumbs,
       })
@@ -121,7 +121,7 @@ folder
     const { json } = opts;
 
     const [createErr, newFolder] = await to(
-      premiumizeApi.createFolder({
+      premiumizeApi.folder.create({
         name,
         parentId: parentId ?? undefined,
       })
@@ -142,6 +142,123 @@ folder
     } else {
       console.log(`Folder created: ${name} (${newFolder.id})`);
     }
+  });
+
+folder
+  .command("search")
+  .argument("<query>", "Search query")
+  .description("Search for items in a folder, including root")
+  .option("-j, --json", "Output in JSON format", false)
+  .action(async (query, opts) => {
+    const { json } = opts;
+    const [searchErr, searchResults] = await to(
+      premiumizeApi.folder.search({
+        q: query,
+      })
+    );
+    if (searchErr) {
+      console.error("Failed to search folder:", searchErr.message);
+      process.exit(1);
+    }
+    console.log(`Search results for "${query}":`);
+    if (json) {
+      console.log(JSON.stringify(searchResults, null, 2));
+    } else {
+      searchResults.content.forEach((item) => {
+        console.log(
+          `- ${item.name.replace(/[\r?\n|\r|\n]/g, "")}${
+            item.type === "folder" ? "/" : ""
+          } (${item.id})`
+        );
+      });
+    }
+  });
+
+/**
+ * @todo add option to rename folder by name instead of id
+ */
+folder
+  .command("rename")
+  .argument("<folderId>", "ID of the folder to rename")
+  .argument("<newName>", "New name for the folder")
+  .option("-j, --json", "Output in JSON format", false)
+  .description("Rename a folder")
+  .action(async (folderId, newName, opts) => {
+    const { json } = opts;
+    const [renameErr, renameResult] = await to(
+      premiumizeApi.folder.rename({
+        id: folderId,
+        name: newName,
+      })
+    );
+    if (renameErr) {
+      console.error("Failed to rename folder:", renameErr.message);
+      process.exit(1);
+    }
+    if (renameResult.status === "error") {
+      console.error("Error renaming folder:", renameResult.message);
+      process.exit(1);
+    }
+    if (json) {
+      console.log(JSON.stringify(renameResult, null, 2));
+    }
+    console.log(`Folder renamed: ${folderId} -> ${newName}`);
+  });
+
+folder
+  .command("delete")
+  .aliases(["rm", "del"])
+  .argument("<folderId>", "ID of the folder to delete")
+  .option("-j, --json", "Output in JSON format", false)
+  .description("Delete a folder")
+  .action(async (folderId, opts) => {
+    const { json } = opts;
+    const [deleteErr, deleteResult] = await to(
+      premiumizeApi.folder.delete({
+        id: folderId,
+      })
+    );
+    if (deleteErr) {
+      console.error("Failed to delete folder:", deleteErr.message);
+      process.exit(1);
+    }
+    if (deleteResult.status === "error") {
+      console.error("Error deleting folder:", deleteResult.message);
+      process.exit(1);
+    }
+    if (json) {
+      console.log(JSON.stringify(deleteResult, null, 2));
+    }
+    console.log(`Folder deleted: ${folderId}`);
+  });
+
+/** Item */
+const item = app.command("item").description("Manage items in folders");
+
+item
+  .command("listall")
+  .aliases(["list", "ls"])
+  .option("-j, --json", "Output in JSON format", false)
+  .description("List all items in all folders")
+  .action(async (opts) => {
+    const { json } = opts;
+
+    const [listAllErr, items] = await to(premiumizeApi.item.listall());
+    if (listAllErr) {
+      console.error("Failed to list all items:", listAllErr.message);
+      process.exit(1);
+    }
+    if (items.status === "error") {
+      console.error("Error listing all items");
+      process.exit(1);
+    }
+    console.log("All items in all folders:");
+    if (json) {
+      console.log(JSON.stringify(items, null, 2));
+    }
+    items.files.forEach((item) => {
+      console.log(`- ${item.name.replace(/[\r?\n|\r|\n]/g, "")} (${item.id})`);
+    });
   });
 
 app.parse();
