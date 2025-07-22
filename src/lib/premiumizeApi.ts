@@ -8,6 +8,7 @@ import {
   Schema_FolderList,
   Schema_FolderRename,
   Schema_FolderSearch,
+  Schema_ItemFullDetails,
   Schema_ItemListAll,
   Schema_ServicesList,
 } from "./premiumize.types";
@@ -63,9 +64,7 @@ async function api<T>(
 
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
-    throw new Error(
-      `Invalid response from ${url}: ${JSON.stringify(parsed.error, null, 2)}`
-    );
+    throw parsed.error;
   }
   return parsed.data;
 }
@@ -180,6 +179,14 @@ export const premiumizeApi = {
   item: {
     listall: () => {
       return api("item/listall", Schema_ItemListAll);
+    },
+    details: (opts: { id: string }) => {
+      const { id } = opts;
+      if (!id) {
+        throw new Error("Item ID is required.");
+      }
+      const path = `item/details?id=${encodeURIComponent(id)}`;
+      return api(path, Schema_ItemFullDetails);
     },
   },
 };

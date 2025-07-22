@@ -31,6 +31,38 @@ const ItemSchema = z
   })
   .extend(ItemDetailsSchema.partial().shape);
 
+export const Schema_ItemFullDetails = z.object({
+  id: z.string().nullish(),
+  name: z.string().nullish(),
+  type: z.enum(["file", "folder"]).nullish(),
+  size: z.number().nullish(),
+  created_at: z.number().nullish(),
+  folder_id: z.string().optional(),
+  acodec: z.string().optional(),
+  vcodec: z.string().optional(),
+  link: z.string().optional(),
+  mime_type: z.string().optional(),
+  opensubtitles_hash: z.string().optional(),
+  resx: z.string().optional().nullish(),
+  resy: z.string().optional().nullish(),
+  duration: z.number().optional().nullish(),
+  transcode_status: z
+    .enum([
+      "not_applicable",
+      "running",
+      "finished",
+      "pending",
+      "good_as_is",
+      "error",
+      "fetch_pending",
+    ])
+    .nullish(),
+  virus_scan: z.enum(["ok", "infected", "error"]).optional().nullish(),
+  stream_link: z.string().optional().nullish(),
+  sudio_track_names: z.array(z.string()).optional(),
+  bitrate: z.number().optional(),
+});
+
 // API responses
 export const Schema_ServicesList = z.object({
   cache: z.array(z.string()),
@@ -97,7 +129,7 @@ const ItemSchema_ListAll = z.object({
   created_at: z.number(),
   size: z.number(),
   mime_type: z.string(),
-  virus_scan: z.enum(["ok", "infected", "error"]),
+  virus_scan: z.enum(["ok", "infected", "error"]).optional().nullish(),
   path: z.string(),
 });
 export const Schema_ItemListAll = z.object({

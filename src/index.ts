@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { premiumizeApi } from "./lib/premiumizeApi.js";
 import to from "await-to-js";
 import { appEnv } from "./env.js";
+import z, { ZodError } from "zod";
 
 const version = "0.0.1";
 
@@ -245,7 +246,14 @@ item
 
     const [listAllErr, items] = await to(premiumizeApi.item.listall());
     if (listAllErr) {
-      console.error("Failed to list all items:", listAllErr.message);
+      if (listAllErr instanceof ZodError || listAllErr.name === "ZodError") {
+        console.error("Validation error while listing all items:");
+        console.error(
+          (listAllErr as ZodError).issues.map((issue) => issue.path).join("\n")
+        );
+      } else {
+        console.error("Failed to list all items:", listAllErr.message);
+      }
       process.exit(1);
     }
     if (items.status === "error") {
@@ -255,9 +263,50 @@ item
     console.log("All items in all folders:");
     if (json) {
       console.log(JSON.stringify(items, null, 2));
+    } else {
+      items.files.forEach((item) => {
+        console.log(
+          `- ${item.name.replace(/[\r?\n|\r|\n]/g, "")} (${item.id})`
+        );
+      });
     }
-    items.files.forEach((item) => {
-      console.log(`- ${item.name.replace(/[\r?\n|\r|\n]/g, "")} (${item.id})`);
+  });
+
+item
+  .command("details")
+  .argument("<itemId>", "ID of the item to get details for")
+  .option("-j, --json", "Output in JSON format", false)
+  .description("Get details of an item")
+  .action(async (itemId, opts) => {
+    const { json } = opts;
+    const [detailsErr, itemDetails] = await to(
+      premiumizeApi.item.details({
+        id: itemId,
+      })
+    );
+    if (detailsErr) {
+      if (detailsErr instanceof ZodError || detailsErr.name === "ZodError") {
+        console.error("Validation error while getting item details:");
+        console.error(
+          (detailsErr as ZodError).issues.map((issue) => issue.path).join("\n")
+        );
+      } else {
+        console.error("Failed to get item details:", detailsErr.message);
+      }
+      process.exit(1);
+    }
+
+    if (json) {
+      console.log(JSON.stringify(itemDetails, null, 2));
+      process.exit(0);
+    }
+    console.log(`Item details for ${itemId}:`);
+
+    // loop through each key and output
+    Object.entries(itemDetails).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        console.log(`- ${key}: ${value}`);
+      }
     });
   });
 
