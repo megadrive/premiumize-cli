@@ -19,7 +19,7 @@ const ItemDetailsSchema = z.object({
     "fetch_pending",
   ]),
   link: z.string(),
-  stream_link: z.string(),
+  stream_link: z.string().optional().nullable(),
   virus_scan: z.enum(["ok", "infected", "error"]),
 });
 
@@ -135,4 +135,38 @@ const ItemSchema_ListAll = z.object({
 export const Schema_ItemListAll = z.object({
   status: z.enum(["success", "error"]),
   files: z.array(ItemSchema_ListAll),
+});
+
+export const Schema_TransferCreate = z.object({
+  status: z.enum(["success", "error"]),
+  id: z.string().optional(),
+  name: z.string().optional(),
+  type: z.string(),
+});
+
+export const Schema_TransferList = z.object({
+  status: z.enum(["success", "error"]),
+  transfers: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      message: z.string().optional().nullable(),
+      status: z.enum([
+        "waiting",
+        "finished",
+        "running",
+        "deleted",
+        "banned",
+        "error",
+        "timeout",
+        "seeding",
+        "queued",
+      ]),
+      progress: z.number().nullable(),
+      src: z.string().optional(),
+      folder_id: z.string().optional().nullable(),
+      file_id: z.string().optional().nullable(),
+      other_cloud_id: z.string().optional().nullable(),
+    })
+  ),
 });

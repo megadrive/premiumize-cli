@@ -11,6 +11,7 @@ import {
   Schema_ItemFullDetails,
   Schema_ItemListAll,
   Schema_ServicesList,
+  Schema_TransferList,
 } from "./premiumize.types";
 
 function appendToken(url: string) {
@@ -64,6 +65,7 @@ async function api<T>(
 
   const parsed = schema.safeParse(json);
   if (!parsed.success) {
+    console.error(`received: ${JSON.stringify(json, null, 2)}`);
     throw parsed.error;
   }
   return parsed.data;
@@ -187,6 +189,32 @@ export const premiumizeApi = {
       }
       const path = `item/details?id=${encodeURIComponent(id)}`;
       return api(path, Schema_ItemFullDetails);
+    },
+  },
+  transfer: {
+    create: (opts: { src: string; folder_id?: string }) => {
+      const { src, folder_id } = opts;
+      if (!src || src.length < 1 || src.length > 1000) {
+        throw new Error("Source URL must be between 1 and 1000 characters.");
+      }
+      const formData = new URLSearchParams({
+        src,
+      });
+      if (folder_id) {
+        formData.set("folder_id", folder_id);
+      }
+      const path = "transfer/create";
+      return api(path, z.object({ id: z.string() }), {
+        method: "POST",
+        body: formData.toString(),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
+    },
+    list: () => {
+      return api("transfer/list", Schema_TransferList);
     },
   },
 };

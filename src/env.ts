@@ -19,4 +19,15 @@ export const appEnv = cleanEnv(process.env, {
     desc: "Enable dry run mode, which does not perform any actual API calls. Useful for development and testing.",
     default: false,
   }),
+  PREMIUMIZE_CLIENT_ID: str({
+    desc: "Your Premiumize.me client ID.",
+    example: "your-client-id",
+    requiredWhen: (env) => !!env.PREMIUMIZE_CLIENT_SECRET,
+  }),
+  PREMIUMIZE_CLIENT_SECRET: str({
+    desc: "Your Premiumize.me client secret.",
+    example: "your-client-secret",
+    default: "",
+    requiredWhen: (env) => !!env.PREMIUMIZE_CLIENT_ID,
+  }),
 });
